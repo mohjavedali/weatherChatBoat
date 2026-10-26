@@ -1,0 +1,40 @@
+services:
+  # NestJS Web App Server
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      - PORT=3000
+      - REDIS_URL=redis://redis:6379
+      - CHROMA_URL=http://chroma:8000
+      - OLLAMA_BASE_URL=http://host.docker.internal:11434
+      - WEATHER_API_KEY=${WEATHER_API_KEY}
+      - CHROMA_COLLECTION_NAME=${CHROMA_COLLECTION_NAME}
+    depends_on:
+      - redis
+      - chroma
+
+  # Redis State Checkpointer
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  # Chroma Vector Database
+  chroma:
+    image: chromadb/chroma:latest
+    ports:
+      - "8000:8000"
+    volumes:
+      - chroma_data:/chroma/.chroma/index
+
+volumes:
+  redis_data:
+  chroma_data:
